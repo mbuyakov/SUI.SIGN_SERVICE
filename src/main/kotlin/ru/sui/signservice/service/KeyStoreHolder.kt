@@ -52,7 +52,7 @@ class KeyStoreHolder(private val environment: Environment) {
             return x509CertificateChainCache[alias]
         }
 
-        val certificateChain = keyStore.getCertificateChain(alias) as Array<X509Certificate>?
+        val certificateChain = keyStore.getCertificateChain(alias)?.map { it as X509Certificate }?.toTypedArray()
 
         if (certificateChain != null && certificateChain.isNotEmpty()) {
             x509CertificateChainCache[alias] = certificateChain.toList()
