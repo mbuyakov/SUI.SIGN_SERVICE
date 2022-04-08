@@ -82,12 +82,12 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
 
     private fun signPKCS7(dataToSign: ByteArray, key: PrivateKey, certificate: X509Certificate): SignatureAndDigest {
         val sigAlgorithm = keyStoreHolder.getSigAlgorithmForKey(key) ?: throw SigAlgorithmNotFoundSignServiceException(key)
-        val digAlgorithm = AlgorithmId.getDigAlgFromSigAlg(sigAlgorithm)
-        val encAlgorithm = AlgorithmId.getEncAlgFromSigAlg(sigAlgorithm)
+        val digAlgorithm = AlgorithmId.get(AlgorithmId.getDigAlgFromSigAlg(sigAlgorithm))
+        val encAlgorithm = AlgorithmId.get(AlgorithmId.getEncAlgFromSigAlg(sigAlgorithm))
 
         log.debug { "Sign PKCS7 (sigAlgorithm=$sigAlgorithm, digAlgorithm=$digAlgorithm, encAlgorithm=$encAlgorithm)" }
 
-        val digest = getDigest(dataToSign, digAlgorithm)
+        val digest = getDigest(dataToSign, digAlgorithm.name)
 
         // Данные для подписи
         val authenticatedAttributes = PKCS9Attributes(arrayOf(
@@ -106,16 +106,16 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
         val signerInfo = sun.security.pkcs.SignerInfo(
             X500Name(certificate.issuerDN.name),
             certificate.serialNumber,
-            AlgorithmId.get(digAlgorithm),
+            digAlgorithm,
             authenticatedAttributes,
-            AlgorithmId.get(encAlgorithm),
+            encAlgorithm,
             signature,
             null
         )
 
         // Собираем все вместе и пишем в стрим
         val pksc7 = PKCS7(
-            arrayOf(AlgorithmId.get(digAlgorithm)),
+            arrayOf(digAlgorithm),
             ContentInfo(ContentInfo.DATA_OID, null), // detached sign
             arrayOf(certificate),
             arrayOf(signerInfo)
@@ -126,20 +126,20 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
 
     private fun signBES(dataToSign: ByteArray, key: PrivateKey, certificateChain: List<X509Certificate>): SignatureAndDigest {
         val sigAlgorithm = keyStoreHolder.getSigAlgorithmForKey(key) ?: throw SigAlgorithmNotFoundSignServiceException(key)
-        val digAlgorithm = AlgorithmId.getDigAlgFromSigAlg(sigAlgorithm)
-        val encAlgorithm = AlgorithmId.getEncAlgFromSigAlg(sigAlgorithm)
+        val digAlgorithm = AlgorithmId.get(AlgorithmId.getDigAlgFromSigAlg(sigAlgorithm))
+        val encAlgorithm = AlgorithmId.get(AlgorithmId.getEncAlgFromSigAlg(sigAlgorithm))
 
         log.debug { "Sign BES (sigAlgorithm=$sigAlgorithm, digAlgorithm=$digAlgorithm, encAlgorithm=$encAlgorithm)" }
 
-        val digest = getDigest(dataToSign, digAlgorithm)
+        val digest = getDigest(dataToSign, digAlgorithm.name)
 
         val cadesSignature = CAdESSignature(false)
 
         // Создаем подписанта CAdES-BES.
         cadesSignature.addSigner(
             JCP.PROVIDER_NAME,
-            digAlgorithm,
-            encAlgorithm,
+            digAlgorithm.name,
+            encAlgorithm.name,
             key,
             certificateChain,
             CAdESType.CAdES_BES,
