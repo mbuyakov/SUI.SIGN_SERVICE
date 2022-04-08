@@ -62,6 +62,7 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
     fun signXml(xmlToSign: Node, id: String, certAlias: String): XMLSignature {
         try {
             val list = getNodeList(xmlToSign, "//*[@Id='$id']").takeIf { it.length > 0 }
+                ?: getNodeList(xmlToSign, "//*[@*[local-name()='Id']='$id']").takeIf { it.length > 0 }
                 ?: getNodeList(xmlToSign, "//*[@*[local-name()='id']='$id']").takeIf { it.length > 0 }
                 ?: throw BadInputSignServiceException("Element with id '$id' not found")
 
