@@ -27,11 +27,3 @@ RUN chmod +x /opt/docker-entrypoint.sh
 ENTRYPOINT ["/opt/docker-entrypoint.sh"]
 
 COPY --from=builder /app/target/*.jar /opt/app.jar
-
-RUN adduser signservice --system &&\
-    chown signservice -R ${JAVA_HOME} &&\
-    chown signservice -R /opt &&\
-    chown signservice -R /var/opt/cprocsp/keys &&\
-    chmod -R 777 ${JAVA_HOME}/jre/lib/security/cacerts
-
-USER signservice
