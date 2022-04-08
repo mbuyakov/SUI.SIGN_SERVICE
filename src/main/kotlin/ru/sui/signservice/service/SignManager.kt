@@ -1,5 +1,6 @@
 package ru.sui.signservice.service
 
+import mu.KotlinLogging
 import org.apache.xml.security.signature.XMLSignature
 import org.apache.xml.security.transforms.Transforms
 import org.apache.xml.security.utils.JDKXPathAPI
@@ -23,9 +24,11 @@ import java.security.PrivateKey
 import java.security.Signature
 import java.security.cert.X509Certificate
 import java.util.*
-import javax.xml.xpath.XPathFactory
 import kotlin.jvm.Throws
 
+private val log = KotlinLogging.logger { }
+
+@Suppress("DuplicatedCode")
 @Service
 class SignManager(private val keyStoreHolder: KeyStoreHolder) {
 
@@ -82,6 +85,8 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
         val digAlgorithm = AlgorithmId.getDigAlgFromSigAlg(sigAlgorithm)
         val encAlgorithm = AlgorithmId.getEncAlgFromSigAlg(sigAlgorithm)
 
+        log.debug { "Sign PKCS7 (sigAlgorithm=$sigAlgorithm, digAlgorithm=$digAlgorithm, encAlgorithm=$encAlgorithm)" }
+
         val digest = getDigest(dataToSign, digAlgorithm)
 
         // Данные для подписи
@@ -124,6 +129,8 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
         val digAlgorithm = AlgorithmId.getDigAlgFromSigAlg(sigAlgorithm)
         val encAlgorithm = AlgorithmId.getEncAlgFromSigAlg(sigAlgorithm)
 
+        log.debug { "Sign BES (sigAlgorithm=$sigAlgorithm, digAlgorithm=$digAlgorithm, encAlgorithm=$encAlgorithm)" }
+
         val digest = getDigest(dataToSign, digAlgorithm)
 
         val cadesSignature = CAdESSignature(false)
@@ -156,6 +163,8 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
             ?: throw NotFoundSignServiceException("SigUri for key algorithm '${key.algorithm}' not found")
         val digUri = keyStoreHolder.getDigUriForKey(key)
             ?: throw NotFoundSignServiceException("DigUri for key algorithm '${key.algorithm}' not found")
+
+        log.debug { "Sign XML (sigUri=$sigUri, digUri=$digUri)" }
 
         val owner = xmlToSign.ownerDocument
         val refURI = xmlToSign.attributes.getNamedItem("id")?.nodeValue?.let { "#$it" }
