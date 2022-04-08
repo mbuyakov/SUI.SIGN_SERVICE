@@ -1,5 +1,6 @@
 package ru.sui.signservice.controller
 
+import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import org.w3c.dom.Element
 import ru.sui.signservice.dto.DataSignResultDto
@@ -39,7 +40,11 @@ class MainController(
         return DataSignResultDto(signManager.signBES(dataToSign, certAlias))
     }
 
-    @PostMapping("/signXml")
+    @PostMapping(
+        path = ["/signXml"],
+        consumes = [MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE],
+        produces = [MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE]
+    )
     fun signXml(@RequestBody xmlToSign: Element, @RequestParam("id") id: String, @RequestParam("certAlias") certAlias: String): Element {
         return signManager.signXml(xmlToSign, id, certAlias).element
     }
