@@ -122,6 +122,7 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
     private fun signBES(dataToSign: ByteArray, key: PrivateKey, certificateChain: List<X509Certificate>): SignatureAndDigest {
         val sigAlgorithm = keyStoreHolder.getSigAlgorithmForKey(key) ?: throw SigAlgorithmNotFoundSignServiceException(key)
         val digAlgorithm = AlgorithmId.getDigAlgFromSigAlg(sigAlgorithm)
+        val encAlgorithm = AlgorithmId.getEncAlgFromSigAlg(sigAlgorithm)
 
         val digest = getDigest(dataToSign, digAlgorithm)
 
@@ -131,7 +132,7 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
         cadesSignature.addSigner(
             JCP.PROVIDER_NAME,
             digAlgorithm,
-            sigAlgorithm,
+            encAlgorithm,
             key,
             certificateChain,
             CAdESType.CAdES_BES,
