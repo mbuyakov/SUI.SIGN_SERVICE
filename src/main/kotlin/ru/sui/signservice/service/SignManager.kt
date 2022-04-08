@@ -3,7 +3,6 @@ package ru.sui.signservice.service
 import mu.KotlinLogging
 import org.apache.xml.security.signature.XMLSignature
 import org.apache.xml.security.transforms.Transforms
-import org.apache.xml.security.utils.JDKXPathAPI
 import org.springframework.stereotype.Service
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
@@ -24,6 +23,8 @@ import java.security.PrivateKey
 import java.security.Signature
 import java.security.cert.X509Certificate
 import java.util.*
+import javax.xml.xpath.XPathConstants
+import javax.xml.xpath.XPathFactory
 import kotlin.jvm.Throws
 
 private val log = KotlinLogging.logger { }
@@ -31,6 +32,8 @@ private val log = KotlinLogging.logger { }
 @Suppress("DuplicatedCode")
 @Service
 class SignManager(private val keyStoreHolder: KeyStoreHolder) {
+
+    private val xPathFactory = XPathFactory.newInstance()
 
     @Throws(SignServiceException::class)
     fun signPKCS7(dataToSign: ByteArray, certAlias: String): SignatureAndDigest {
@@ -73,7 +76,7 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
             val certificate = keyStoreHolder.getX509Certificate(certAlias) ?: throw CertificateNotFoundSignServiceException(certAlias)
             val key = keyStoreHolder.getPrivateKey(certAlias) ?: throw PrivateKeyNotFoundSignServiceException(certAlias)
 
-            return signXml(list.item(0), key, certificate)
+            return signXml(list.item(0), id, key, certificate)
         } catch (exception: SignServiceException) {
             throw exception
         } catch (exception: Exception) {
@@ -159,7 +162,7 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
         return SignatureAndDigest(outSignatureStream.toByteArray(), digest)
     }
 
-    private fun signXml(xmlToSign: Node, key: PrivateKey, certificate: X509Certificate): XMLSignature {
+    private fun signXml(xmlToSign: Node, id: String, key: PrivateKey, certificate: X509Certificate): XMLSignature {
         val sigUri = keyStoreHolder.getSigUriForKey(key)
             ?: throw NotFoundSignServiceException("SigUri for key algorithm '${key.algorithm}' not found")
         val digUri = keyStoreHolder.getDigUriForKey(key)
@@ -168,10 +171,10 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
         log.debug { "Sign XML (sigUri=$sigUri, digUri=$digUri)" }
 
         val owner = xmlToSign.ownerDocument
-        val refURI = xmlToSign.attributes.getNamedItem("id")?.nodeValue?.let { "#$it" }
+        val refURI = if (id.startsWith("#")) id else "#$id"
 
-        return XMLSignature(owner, refURI, sigUri, Transforms.TRANSFORM_C14N_EXCL_OMIT_COMMENTS).apply {
-            this.addDocument(null, Transforms(owner), digUri)
+        return XMLSignature(owner, "", sigUri, Transforms.TRANSFORM_C14N_EXCL_OMIT_COMMENTS).apply {
+            this.addDocument(refURI, Transforms(owner), digUri)
             this.addKeyInfo(certificate)
             this.sign(key)
         }
@@ -182,7 +185,7 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
     }
 
     private fun getNodeList(xml: Node, xpath: String): NodeList {
-        return JDKXPathAPI().selectNodeList(xml, null, xpath, xml.ownerDocument)
+        return xPathFactory.newXPath().evaluate(xpath, xml, XPathConstants.NODESET) as NodeList
     }
 
 }
