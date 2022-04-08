@@ -97,7 +97,7 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
         ))
 
         // Подписываем
-        val signer = Signature.getInstance(sigAlgorithm)
+        val signer = Signature.getInstance(sigAlgorithm, JCP.PROVIDER_NAME)
         signer.initSign(key)
         signer.update(authenticatedAttributes.derEncoding)
         val signature = signer.sign()
