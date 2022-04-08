@@ -16,5 +16,4 @@ keytool -J-Dkeytool.compat=true -J-Duse.cert.stub=true -list -provider ru.Crypto
     keytool -J-Dkeytool.compat=true -J-Duse.cert.stub=true -keystore "$JAVA_HOME/jre/lib/security/cacerts" -storepass changeit -noprompt -trustcacerts -import -alias "root-$alias" -provider ru.CryptoPro.JCP.JCP -file "/tmp/$ROOT_ALIAS"
   done;
 
-cd /opt
-"$JAVA_HOME/jre/bin/java" -jar /app.jar -Dru.CryptoPro.AdES.validate_tsp=false
+"$JAVA_HOME/jre/bin/java" -jar /opt/app.jar -Dru.CryptoPro.AdES.validate_tsp=false

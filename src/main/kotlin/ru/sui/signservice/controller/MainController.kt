@@ -21,7 +21,7 @@ class MainController(
         return keyStoreHolder.getKeyStore().aliases().toList()
     }
 
-    @GetMapping("/getCert}")
+    @GetMapping("/getCert")
     fun getCert(@RequestParam("certAlias") certAlias: String): String {
         return keyStoreHolder.getKeyStore().getCertificate(certAlias)
             ?.encoded
