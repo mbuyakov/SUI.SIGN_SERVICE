@@ -2,10 +2,9 @@ package ru.sui.signservice.controller
 
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
-import org.w3c.dom.Element
 import ru.sui.signservice.dto.DataSignResultDto
 import ru.sui.signservice.exception.CertificateNotFoundSignServiceException
-import ru.sui.signservice.extension.parseString
+import ru.sui.signservice.extension.parse
 import ru.sui.signservice.extension.transformToString
 import ru.sui.signservice.service.KeyStoreHolder
 import ru.sui.signservice.service.SignManager
@@ -62,8 +61,8 @@ class MainController(
         consumes = [MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE],
         produces = [MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE]
     )
-    fun signXml(@RequestBody xmlToSign: String, @RequestParam("id") id: String, @RequestParam("certAlias") certAlias: String): String {
-        val documentToSign = documentBuilderFactory.newDocumentBuilder().parseString(xmlToSign).documentElement
+    fun signXml(@RequestBody xmlToSign: ByteArray, @RequestParam("id") id: String, @RequestParam("certAlias") certAlias: String): String {
+        val documentToSign = documentBuilderFactory.newDocumentBuilder().parse(xmlToSign).documentElement
         val signResult = signManager.signXml(documentToSign, id, certAlias)
         return createTransformer().transformToString(DOMSource(signResult.element))
     }
