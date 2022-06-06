@@ -172,9 +172,10 @@ class SignManager(private val keyStoreHolder: KeyStoreHolder) {
 
         val owner = xmlToSign.ownerDocument
         val refURI = if (id.startsWith("#")) id else "#$id"
+        val transforms = Transforms(owner).apply { this.addTransform(Transforms.TRANSFORM_C14N_EXCL_OMIT_COMMENTS) }
 
         return XMLSignature(owner, "", sigUri, Transforms.TRANSFORM_C14N_EXCL_OMIT_COMMENTS).apply {
-            this.addDocument(refURI, Transforms(owner), digUri)
+            this.addDocument(refURI, transforms, digUri)
             this.addKeyInfo(certificate)
             this.sign(key)
         }
