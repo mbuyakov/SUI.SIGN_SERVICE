@@ -1,6 +1,6 @@
 FROM nexus.suilib.ru/openjdk:8-alpine as java-jcp
 
-ARG JCP_VERSION=jcp-2.0.41618
+ARG JCP_VERSION=jcp-2.0.41789
 
 COPY ./buildfiles/${JCP_VERSION}.zip /opt/jcp.zip
 
